@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador de Pacientes</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f9f9f9;
+        }
+        .table-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 1000px;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        td {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .hidden {
+            display: none;
+        }
+        .no-wrap {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="entrarBtn" class="btn btn-primary">Entrou</button>
+    <div class="container">
+        <h1>Contador de Pacientes: <span id="counter">0</span></h1>
+
+        <div class="options">
+            <div id="tipoAtendimento" class="hidden">
+                <p>Escolha o tipo de atendimento:</p>
+                <button class="tipoBtn btn btn-info" data-tipo="Orcamentos">Orçamento</button>
+                <button class="tipoBtn btn btn-info" data-tipo="Vacinas">Vacina</button>
+                <button class="tipoBtn btn btn-info" data-tipo="Informacao">Informações Gerais</button>
+                <button class="tipoBtn btn btn-info" data-tipo="Resultado">Resultado</button>
+                <button class="tipoBtn btn btn-info" data-tipo="Coleta">Coleta a domicilio</button>
+                <button class="tipoBtn btn btn-info" data-tipo="Cadastro">Cadastro</button>
+                <button class="tipoBtn btn btn-info" data-tipo="Lce">LCE / Informação</button>
+                <button class="tipoBtn btn btn-info" data-tipo="Pagamento">Pagamento / Informação</button>
+                <button class="tipoBtn btn btn-info" data-tipo="Autorizacao">Autorização / Informação</button>
+                <button class="tipoBtn btn btn-info" data-tipo="Consulta">Consulta / Informação</button>
+                <button class="tipoBtn btn btn-info" data-tipo="ClienteSilencioso">Cliente silencioso</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="pessoasTable" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Atendimento</th>
+                        <th>Tipo de Atendimento</th>
+                        <th>Status</th>
+                        <th>Opções</th>
+                        <th>Motivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Botão de Enviar -->
+        <button id="enviarBtn" class="btn btn-success hidden" onclick="enviarDados()">Enviar Dados</button>
+
+    </div>
+
+    <script>
+        let totalEntrou = 0;
+        let counter = 0;
+        let atendidas = 0;
+        let naoAtendidas = 0;
+        let totalOrcamentos = 0;
+        let totalVacinas = 0;
+        let totalInformacao = 0;
+        let totalResultado = 0;
+        let totalColeta = 0;
+        let totalCadastro = 0;
+        let totalLce = 0;
+        let totalPagamento = 0;
+        let totalAutorizacao = 0;
+        let totalConsulta = 0;
+        let totalClienteSilencioso = 0;
+        let registro = [];
+        let currentPerson = null;
+
+        const counterElement = document.getElementById('counter');
+        const entrarBtn = document.getElementById('entrarBtn');
+        const tipoAtendimentoDiv = document.getElementById('tipoAtendimento');
+        const pessoasTable = document.getElementById('pessoasTable');
+        const enviarBtn = document.getElementById('enviarBtn');  // Referência para o botão "Enviar"
+
+        // Mostra a opção de atendimento quando o botão "Entrou" é clicado
+        entrarBtn.addEventListener('click', function() {
+            counter++;
+            totalEntrou++;
+            counterElement.textContent = counter;
+            tipoAtendimentoDiv.classList.remove('hidden');
+            currentPerson = null;
+            entrarBtn.classList.add('hidden');
+        });
+
+        // Seleção do tipo de atendimento
+        document.querySelectorAll('.tipoBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const tipo = button.getAttribute('data-tipo');
+                switch (tipo) {
+                    case 'Orcamentos':
+                        totalOrcamentos++;
+                        break;
+                    case 'Vacinas':
+                        totalVacinas++;
+                        break;
+                    case 'Informacao':
+                        totalInformacao++;
+                        break;
+                    case 'Resultado':
+                        totalResultado++;
+                        break;
+                    case 'Coleta':
+                        totalColeta++;
+                        break;
+                    case 'Cadastro':
+                        totalCadastro++;
+                        break;
+                    case 'Lce':
+                        totalLce++;
+                        break;
+                    case 'Pagamento':
+                        totalPagamento++;
+                        break;
+                    case 'Autorizacao':
+                        totalAutorizacao++;
+                        break;
+                    case 'Consulta':
+                        totalConsulta++;
+                        break;
+                    case 'ClienteSilencioso':
+                        totalClienteSilencioso++;
+                        break;
+                }
+
+                // Atualiza a tabela
+                updateTable(counter, tipo, "Atendida", `Pessoa ${counter}: ${tipo}, Foi atendida`);
+                currentPerson = null;
+                tipoAtendimentoDiv.classList.add('hidden');
+                updateDownloadButtons();
+
+                // Exibe o botão "Enviar"
+                enviarBtn.classList.remove('hidden');
+                entrarBtn.classList.remove('hidden');
+            });
+        });
+
+        // Função para atualizar a tabela
+        function updateTable(num, tipo, status, estadoAtual) {
+            const tableBody = document.querySelector("#pessoasTable tbody");
+            const existingRow = Array.from(tableBody.rows).find(row => row.cells[0].textContent == num);
+
+            if (existingRow) {
+                existingRow.cells[1].textContent = estadoAtual;
+                existingRow.cells[2].textContent = tipo;
+                existingRow.cells[3].innerHTML = '<div class="no-wrap">' +
+                    '<button class="btn btn-success btn-sm" disabled>Atendida</button>' +
+                    '</div>';
+                existingRow.cells[4].innerHTML = '<button class="btn btn-secondary btn-sm" onclick="editarTipoAtendimento(' + num + ')">Editar atendimento</button>';
+                existingRow.cells[5].textContent = "N/A"; // Motivo inicialmente vazio
+            } else {
+                const row = tableBody.insertRow();
+                row.insertCell().textContent = num;
+                row.insertCell().textContent = estadoAtual;
+                row.insertCell().textContent = tipo;
+                row.insertCell().innerHTML = '<div class="no-wrap">' +
+                    '<button class="btn btn-success btn-sm" disabled>Atendida</button>' +
+                    '</div>';
+                row.insertCell().innerHTML = '<button class="btn btn-secondary btn-sm" onclick="editarTipoAtendimento(' + num + ')">Editar atendimento</button>';
+                row.insertCell().textContent = "N/A"; // Motivo inicialmente vazio
+            }
+        }
+
+        // Função de envio dos dados para o Google Apps Script
+        function enviarDados() {
+            // Preenche os totais de atendimentos nas variáveis
+            document.getElementById('totalOrcamentos').value = totalOrcamentos;
+            document.getElementById('totalVacinas').value = totalVacinas;
+            document.getElementById('totalInformacao').value = totalInformacao;
+            document.getElementById('totalResultado').value = totalResultado;
+            document.getElementById('totalColeta').value = totalColeta;
+            document.getElementById('totalCadastro').value = totalCadastro;
+            document.getElementById('totalLce').value = totalLce;
+            document.getElementById('totalPagamento').value = totalPagamento;
+            document.getElementById('totalAutorizacao').value = totalAutorizacao;
+            document.getElementById('totalConsulta').value = totalConsulta;
+            document.getElementById('totalClienteSilencioso').value = totalClienteSilencioso;
+            document.getElementById('atendidas').value = atendidas;
+
+            // Adiciona o contador de pacientes
+            document.getElementById('contadorPacientes').value = totalEntrou;  // Contador de pacientes
+
+            // Formata a data no formato DD-MM-YY
+            const date = new Date();
+            const formattedDate = ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + date.getFullYear().toString().slice(-2);
+            document.getElementById('data').value = formattedDate;  // Data no formato DD-MM-YY
+
+            // Enviar o formulário
+            document.getElementById('sendDataForm').submit();
+        }
+
+        // Função para resetar os contadores
+        function resetCounters() {
+            totalOrcamentos = 0;
+            totalVacinas = 0;
+            totalInformacao = 0;
+            totalResultado = 0;
+            totalColeta = 0;
+            totalCadastro = 0;
+            totalLce = 0;
+            totalPagamento = 0;
+            totalAutorizacao = 0;
+            totalConsulta = 0;
+            totalClienteSilencioso = 0;
+            atendidas = 0;
+            naoAtendidas = 0;
+            counter = 0;
+            counterElement.textContent = 0;
+            document.querySelector("#pessoasTable tbody").innerHTML = "";
+            enviarBtn.classList.add('hidden');
+        }
+
+        // Atualiza os botões para baixar os dados (se necessário)
+        function updateDownloadButtons() {
+            // Não é mais necessário ter o botão de download
+        }
+    </script>
+
+    <!-- Formulário oculto para enviar dados -->
+    <form id="sendDataForm" method="POST" action="https://script.google.com/macros/s/AKfycbw-KtYQulM3d87rtbv-z3P0c7BVB_1a2KGH6IY0KreySMmWyELVmxLvbSBhYFiCzi_9hw/exec">
+        <input type="hidden" id="data" name="data"> <!-- Data no formato DD-MM-YY -->
+        <input type="hidden" id="totalOrcamentos" name="totalOrcamentos">
+        <input type="hidden" id="totalVacinas" name="totalVacinas">
+        <input type="hidden" id="totalInformacao" name="totalInformacao">
+        <input type="hidden" id="totalResultado" name="totalResultado">
+        <input type="hidden" id="totalColeta" name="totalColeta">
+        <input type="hidden" id="totalCadastro" name="totalCadastro">
+        <input type="hidden" id="totalLce" name="totalLce">
+        <input type="hidden" id="totalPagamento" name="totalPagamento">
+        <input type="hidden" id="totalAutorizacao" name="totalAutorizacao">
+        <input type="hidden" id="totalConsulta" name="totalConsulta">
+        <input type="hidden" id="totalClienteSilencioso" name="totalClienteSilencioso">
+        <input type="hidden" id="atendidas" name="atendidas">
+        <input type="hidden" id="contadorPacientes" name="contadorPacientes"> <!-- Contador de pacientes -->
+    </form>
+
+</body>
+</html>
