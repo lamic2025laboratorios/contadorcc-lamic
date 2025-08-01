@@ -86,37 +86,42 @@
             </table>
         </div>
 
-        <!-- Botão de Enviar -->
         <button id="enviarBtn" class="btn btn-success hidden" onclick="enviarDados()">Enviar Dados</button>
 
     </div>
 
     <script>
-        let totalEntrou = 0;
-        let counter = 0;
-        let atendidas = 0;
-        let naoAtendidas = 0;
-        let totalOrcamentos = 0;
-        let totalVacinas = 0;
-        let totalInformacao = 0;
-        let totalResultado = 0;
-        let totalColeta = 0;
-        let totalCadastro = 0;
-        let totalLce = 0;
-        let totalPagamento = 0;
-        let totalAutorizacao = 0;
-        let totalConsulta = 0;
-        let totalClienteSilencioso = 0;
-        let registro = [];
-        let currentPerson = null;
+        let totalEntrou = 0, counter = 0, atendidas = 0, naoAtendidas = 0, totalOrcamentos = 0, totalVacinas = 0, totalInformacao = 0, totalResultado = 0, totalColeta = 0, totalCadastro = 0, totalLce = 0, totalPagamento = 0, totalAutorizacao = 0, totalConsulta = 0, totalClienteSilencioso = 0;
+        let registro = [], currentPerson = null;
 
-        const counterElement = document.getElementById('counter');
-        const entrarBtn = document.getElementById('entrarBtn');
-        const tipoAtendimentoDiv = document.getElementById('tipoAtendimento');
-        const pessoasTable = document.getElementById('pessoasTable');
-        const enviarBtn = document.getElementById('enviarBtn');  // Referência para o botão "Enviar"
+        const counterElement = document.getElementById('counter'), entrarBtn = document.getElementById('entrarBtn'), tipoAtendimentoDiv = document.getElementById('tipoAtendimento'), pessoasTable = document.getElementById('pessoasTable'), enviarBtn = document.getElementById('enviarBtn');
 
-        // Mostra a opção de atendimento quando o botão "Entrou" é clicado
+        // --- NOVO: FUNÇÕES DE SALVAMENTO E CARREGAMENTO ---
+        const storageKey = 'estadoContadorClinica'; // Chave única para este contador
+
+        function salvarEstado() {
+            const estado = {
+                totalEntrou, counter, atendidas, naoAtendidas, totalOrcamentos, totalVacinas, totalInformacao, totalResultado, totalColeta, totalCadastro, totalLce, totalPagamento, totalAutorizacao, totalConsulta, totalClienteSilencioso,
+                tabelaHTML: document.querySelector("#pessoasTable tbody").innerHTML
+            };
+            localStorage.setItem(storageKey, JSON.stringify(estado));
+            console.log("Estado salvo!", estado);
+        }
+
+        function carregarEstado() {
+            const estadoSalvo = localStorage.getItem(storageKey);
+            if (estadoSalvo) {
+                const estado = JSON.parse(estadoSalvo);
+                totalEntrou = estado.totalEntrou; counter = estado.counter; atendidas = estado.atendidas; naoAtendidas = estado.naoAtendidas; totalOrcamentos = estado.totalOrcamentos; totalVacinas = estado.totalVacinas; totalInformacao = estado.totalInformacao; totalResultado = estado.totalResultado; totalColeta = estado.totalColeta; totalCadastro = estado.totalCadastro; totalLce = estado.totalLce; totalPagamento = estado.totalPagamento; totalAutorizacao = estado.totalAutorizacao; totalConsulta = estado.totalConsulta; totalClienteSilencioso = estado.totalClienteSilencioso;
+                
+                counterElement.textContent = counter;
+                document.querySelector("#pessoasTable tbody").innerHTML = estado.tabelaHTML;
+                updateDownloadButtons();
+                console.log("Estado carregado!", estado);
+            }
+        }
+        // --- FIM DO NOVO ---
+
         entrarBtn.addEventListener('click', function() {
             counter++;
             totalEntrou++;
@@ -126,87 +131,54 @@
             entrarBtn.classList.add('hidden');
         });
 
-        // Seleção do tipo de atendimento
         document.querySelectorAll('.tipoBtn').forEach(button => {
             button.addEventListener('click', function() {
                 const tipo = button.getAttribute('data-tipo');
                 switch (tipo) {
-                    case 'Orcamentos':
-                        totalOrcamentos++;
-                        break;
-                    case 'Vacinas':
-                        totalVacinas++;
-                        break;
-                    case 'Informacao':
-                        totalInformacao++;
-                        break;
-                    case 'Resultado':
-                        totalResultado++;
-                        break;
-                    case 'Coleta':
-                        totalColeta++;
-                        break;
-                    case 'Cadastro':
-                        totalCadastro++;
-                        break;
-                    case 'Lce':
-                        totalLce++;
-                        break;
-                    case 'Pagamento':
-                        totalPagamento++;
-                        break;
-                    case 'Autorizacao':
-                        totalAutorizacao++;
-                        break;
-                    case 'Consulta':
-                        totalConsulta++;
-                        break;
-                    case 'ClienteSilencioso':
-                        totalClienteSilencioso++;
-                        break;
+                    case 'Orcamentos': totalOrcamentos++; break;
+                    case 'Vacinas': totalVacinas++; break;
+                    case 'Informacao': totalInformacao++; break;
+                    case 'Resultado': totalResultado++; break;
+                    case 'Coleta': totalColeta++; break;
+                    case 'Cadastro': totalCadastro++; break;
+                    case 'Lce': totalLce++; break;
+                    case 'Pagamento': totalPagamento++; break;
+                    case 'Autorizacao': totalAutorizacao++; break;
+                    case 'Consulta': totalConsulta++; break;
+                    case 'ClienteSilencioso': totalClienteSilencioso++; break;
                 }
+                atendidas++; // Incrementa atendidas aqui
 
-                // Atualiza a tabela
                 updateTable(counter, tipo, "Atendida", `Pessoa ${counter}: ${tipo}, Foi atendida`);
                 currentPerson = null;
                 tipoAtendimentoDiv.classList.add('hidden');
                 updateDownloadButtons();
-
-                // Exibe o botão "Enviar"
                 enviarBtn.classList.remove('hidden');
                 entrarBtn.classList.remove('hidden');
+
+                // --- NOVO: Salva o estado após cada atendimento ---
+                salvarEstado();
             });
         });
 
-        // Função para atualizar a tabela
         function updateTable(num, tipo, status, estadoAtual) {
             const tableBody = document.querySelector("#pessoasTable tbody");
-            const existingRow = Array.from(tableBody.rows).find(row => row.cells[0].textContent == num);
-
-            if (existingRow) {
-                existingRow.cells[1].textContent = estadoAtual;
-                existingRow.cells[2].textContent = tipo;
-                existingRow.cells[3].innerHTML = '<div class="no-wrap">' +
-                    '<button class="btn btn-success btn-sm" disabled>Atendida</button>' +
-                    '</div>';
-                existingRow.cells[4].innerHTML = '<button class="btn btn-secondary btn-sm" onclick="editarTipoAtendimento(' + num + ')">Editar atendimento</button>';
-                existingRow.cells[5].textContent = "N/A"; // Motivo inicialmente vazio
-            } else {
-                const row = tableBody.insertRow();
-                row.insertCell().textContent = num;
-                row.insertCell().textContent = estadoAtual;
-                row.insertCell().textContent = tipo;
-                row.insertCell().innerHTML = '<div class="no-wrap">' +
-                    '<button class="btn btn-success btn-sm" disabled>Atendida</button>' +
-                    '</div>';
-                row.insertCell().innerHTML = '<button class="btn btn-secondary btn-sm" onclick="editarTipoAtendimento(' + num + ')">Editar atendimento</button>';
-                row.insertCell().textContent = "N/A"; // Motivo inicialmente vazio
-            }
+            const row = tableBody.insertRow();
+            row.insertCell().textContent = num;
+            row.insertCell().textContent = estadoAtual;
+            row.insertCell().textContent = tipo;
+            row.insertCell().innerHTML = '<div class="no-wrap"><button class="btn btn-success btn-sm" disabled>Atendida</button></div>';
+            row.insertCell().innerHTML = '<button class="btn btn-secondary btn-sm" disabled>Editar</button>'; // Botão de editar desabilitado pois a função não existe no seu arquivo original
+            row.insertCell().textContent = "N/A";
+        }
+        
+        // --- NOVO: Função de editar não existe no seu código, adicionei um alerta para evitar erros ---
+        function editarTipoAtendimento(num) {
+            alert("A função de editar ainda não foi implementada neste arquivo.");
         }
 
-        // Função de envio dos dados para o Google Apps Script
         function enviarDados() {
-            // Preenche os totais de atendimentos nas variáveis
+            // Preenche os totais de atendimentos nas variáveis do formulário
             document.getElementById('totalOrcamentos').value = totalOrcamentos;
             document.getElementById('totalVacinas').value = totalVacinas;
             document.getElementById('totalInformacao').value = totalInformacao;
@@ -219,49 +191,37 @@
             document.getElementById('totalConsulta').value = totalConsulta;
             document.getElementById('totalClienteSilencioso').value = totalClienteSilencioso;
             document.getElementById('atendidas').value = atendidas;
+            document.getElementById('contadorPacientes').value = totalEntrou;
 
-            // Adiciona o contador de pacientes
-            document.getElementById('contadorPacientes').value = totalEntrou;  // Contador de pacientes
-
-            // Formata a data no formato DD-MM-YY
             const date = new Date();
             const formattedDate = ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + date.getFullYear().toString().slice(-2);
-            document.getElementById('data').value = formattedDate;  // Data no formato DD-MM-YY
+            document.getElementById('data').value = formattedDate;
 
-            // Enviar o formulário
+            // --- NOVO: Limpa o armazenamento local ANTES de enviar o formulário ---
+            // Como o form.submit() recarrega a página, esta é a única oportunidade de limpar.
+            localStorage.removeItem(storageKey);
+            
             document.getElementById('sendDataForm').submit();
         }
 
-        // Função para resetar os contadores
         function resetCounters() {
-            totalOrcamentos = 0;
-            totalVacinas = 0;
-            totalInformacao = 0;
-            totalResultado = 0;
-            totalColeta = 0;
-            totalCadastro = 0;
-            totalLce = 0;
-            totalPagamento = 0;
-            totalAutorizacao = 0;
-            totalConsulta = 0;
-            totalClienteSilencioso = 0;
-            atendidas = 0;
-            naoAtendidas = 0;
-            counter = 0;
-            counterElement.textContent = 0;
-            document.querySelector("#pessoasTable tbody").innerHTML = "";
-            enviarBtn.classList.add('hidden');
+            // Esta função pode ser removida ou adaptada, pois a limpeza agora é feita no envio.
+            localStorage.removeItem(storageKey); // Limpa o storage se chamada
+            location.reload(); // Recarrega a página para zerar
         }
 
-        // Atualiza os botões para baixar os dados (se necessário)
         function updateDownloadButtons() {
-            // Não é mais necessário ter o botão de download
+            enviarBtn.classList.toggle('hidden', counter <= 0);
         }
+
+        // --- NOVO: Carrega o estado salvo assim que a página é aberta ---
+        window.onload = function() {
+            carregarEstado();
+        };
     </script>
 
-    <!-- Formulário oculto para enviar dados -->
-    <form id="sendDataForm" method="POST" action="https://script.google.com/macros/s/AKfycbw-KtYQulM3d87rtbv-z3P0c7BVB_1a2KGH6IY0KreySMmWyELVmxLvbSBhYFiCzi_9hw/exec">
-        <input type="hidden" id="data" name="data"> <!-- Data no formato DD-MM-YY -->
+    <form id="sendDataForm" method="POST" action="https://script.google.com/macros/s/AKfycbw-KtYQulM3d87rtbv-z3P0c7BVB_1a2KGH6IY0KreySMmWyELVmxLvbSBhYFiCzi_9hw/exec" target="_blank">
+        <input type="hidden" id="data" name="data">
         <input type="hidden" id="totalOrcamentos" name="totalOrcamentos">
         <input type="hidden" id="totalVacinas" name="totalVacinas">
         <input type="hidden" id="totalInformacao" name="totalInformacao">
@@ -274,7 +234,7 @@
         <input type="hidden" id="totalConsulta" name="totalConsulta">
         <input type="hidden" id="totalClienteSilencioso" name="totalClienteSilencioso">
         <input type="hidden" id="atendidas" name="atendidas">
-        <input type="hidden" id="contadorPacientes" name="contadorPacientes"> <!-- Contador de pacientes -->
+        <input type="hidden" id="contadorPacientes" name="contadorPacientes">
     </form>
 
 </body>
