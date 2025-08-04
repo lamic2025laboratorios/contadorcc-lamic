@@ -339,7 +339,7 @@ async function handleSubmitPending() {
             formData.append('data', record.data);
             formData.append('hora', record.hora);
             
-            const response = await fetch('https://script.google.com/macros/s/AKfycbw-KtYQulM3d87rtbv-z3P0c7BVB_1a2KGH6IY0KreySMmWyELVmxLvbSBhYFiCzi_9hw/exec', {
+            const response = await fetch('https://script.google.com/macros/s/AKfycbxuMIGEH9UuCnQm0mWCQGthOyAFVjHDEDc2gDEGuP1vYZ6_mrZ05syaESVAUg4uOZ83/exec', {
                 method: 'POST',
                 body: formData
             });
