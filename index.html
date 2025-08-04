@@ -4,238 +4,202 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contador de Pacientes</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #f9f9f9;
-        }
-        .table-container {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin: 20px 0;
-            width: 100%;
-            max-width: 1000px;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        td {
-            max-width: 250px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .hidden {
-            display: none;
-        }
-        .no-wrap {
-            white-space: nowrap;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <script src="scripts.js" defer></script>    
 </head>
 <body>
-
-    <button id="entrarBtn" class="btn btn-primary">Entrou</button>
-    <div class="container">
-        <h1>Contador de Pacientes: <span id="counter">0</span></h1>
-
-        <div class="options">
-            <div id="tipoAtendimento" class="hidden">
-                <p>Escolha o tipo de atendimento:</p>
-                <button class="tipoBtn btn btn-info" data-tipo="Orcamentos">Orçamento</button>
-                <button class="tipoBtn btn btn-info" data-tipo="Vacinas">Vacina</button>
-                <button class="tipoBtn btn btn-info" data-tipo="Informacao">Informações Gerais</button>
-                <button class="tipoBtn btn btn-info" data-tipo="Resultado">Resultado</button>
-                <button class="tipoBtn btn btn-info" data-tipo="Coleta">Coleta a domicilio</button>
-                <button class="tipoBtn btn btn-info" data-tipo="Cadastro">Cadastro</button>
-                <button class="tipoBtn btn btn-info" data-tipo="Lce">LCE / Informação</button>
-                <button class="tipoBtn btn btn-info" data-tipo="Pagamento">Pagamento / Informação</button>
-                <button class="tipoBtn btn btn-info" data-tipo="Autorizacao">Autorização / Informação</button>
-                <button class="tipoBtn btn btn-info" data-tipo="Consulta">Consulta / Informação</button>
-                <button class="tipoBtn btn btn-info" data-tipo="ClienteSilencioso">Cliente silencioso</button>
+    <!-- Seleção de Unidade -->
+    <div id="unitSelection" class="min-h-screen bg-background flex items-center justify-center p-4">
+        <div class="card w-full max-w-md">
+            <div class="card-header text-center">
+                <h1 class="text-2xl font-bold text-primary">Contador de Pacientes</h1>
+                <p class="text-muted-foreground">Selecione sua unidade</p>
+            </div>
+            <div class="card-content space-y-4">
+                <select id="unitSelect" class="select w-full">
+                    <option value="">Escolha sua unidade</option>
+                    <option value="canal">Canal do Cliente</option>
+                </select>
+                <button id="confirmUnitBtn" class="btn btn-primary w-full" disabled>Confirmar</button>
             </div>
         </div>
-
-        <div class="table-container">
-            <table id="pessoasTable" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Número</th>
-                        <th>Atendimento</th>
-                        <th>Tipo de Atendimento</th>
-                        <th>Status</th>
-                        <th>Opções</th>
-                        <th>Motivo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
-
-        <button id="enviarBtn" class="btn btn-success hidden" onclick="enviarDados()">Enviar Dados</button>
-
     </div>
 
-    <script>
-        let totalEntrou = 0, counter = 0, atendidas = 0, naoAtendidas = 0, totalOrcamentos = 0, totalVacinas = 0, totalInformacao = 0, totalResultado = 0, totalColeta = 0, totalCadastro = 0, totalLce = 0, totalPagamento = 0, totalAutorizacao = 0, totalConsulta = 0, totalClienteSilencioso = 0;
-        let registro = [], currentPerson = null;
+    <!-- Interface Principal -->
+    <div id="mainInterface" class="hidden min-h-screen bg-background p-4">
+        <div class="container max-w-6xl mx-auto space-y-6">
+            <!-- Cabeçalho -->
+            <div class="card">
+                <div class="card-content text-center p-6">
+                    <h1 class="text-3xl font-bold text-primary">Contador de Pacientes</h1>
+                    <p id="selectedUnitDisplay" class="text-muted-foreground mt-2"></p>
+                    <div class="text-4xl font-bold text-primary mt-4">
+                        <span id="counterDisplay">0</span>
+                    </div>
+                    <button id="changeUnitBtn" class="btn btn-outline mt-4">Trocar Unidade</button>
+                </div>
+            </div>
 
-        const counterElement = document.getElementById('counter'), entrarBtn = document.getElementById('entrarBtn'), tipoAtendimentoDiv = document.getElementById('tipoAtendimento'), pessoasTable = document.getElementById('pessoasTable'), enviarBtn = document.getElementById('enviarBtn');
+            <!-- Botão de Entrada -->
+            <div id="entrySection" class="text-center">
+                <button id="entryBtn" class="btn btn-primary btn-lg">Nova Entrada</button>
+            </div>
 
-        // --- NOVO: FUNÇÕES DE SALVAMENTO E CARREGAMENTO ---
-        const storageKey = 'estadoContadorClinica'; // Chave única para este contador
+            <!-- Seleção de Senha -->
+            <div id="passwordSection" class="hidden card">
+                <div class="card-header">
+                    <h3 class="card-title">Tipo de Senha</h3>
+                </div>
+                <div class="card-content grid grid-cols-2 gap-4">
+                    <button class="btn btn-password-with password-btn" data-password="Com Senha">Com Senha</button>
+                    <button class="btn btn-password-without password-btn" data-password="Sem Senha">Sem Senha</button>
+                </div>
+            </div>
 
-        function salvarEstado() {
-            const estado = {
-                totalEntrou, counter, atendidas, naoAtendidas, totalOrcamentos, totalVacinas, totalInformacao, totalResultado, totalColeta, totalCadastro, totalLce, totalPagamento, totalAutorizacao, totalConsulta, totalClienteSilencioso,
-                tabelaHTML: document.querySelector("#pessoasTable tbody").innerHTML
-            };
-            localStorage.setItem(storageKey, JSON.stringify(estado));
-            console.log("Estado salvo!", estado);
-        }
+            <!-- Seleção de Tipo de Atendimento -->
+            <div id="serviceSection" class="hidden card">
+                <div class="card-header">
+                    <h3 class="card-title">Tipo de Atendimento</h3>
+                </div>
+                <div class="card-content space-y-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button class="btn btn-outline service-btn" data-service="ORÇAMENTO VACINA">ORÇAMENTO VACINA</button>
+                        <button class="btn btn-outline service-btn" data-service="ORÇAMENTO EXAME">ORÇAMENTO EXAME</button>
+                        <button class="btn btn-outline service-btn" data-service="CADASTRO PACIENTE">CADASTRO PACIENTE</button>
+                        <button class="btn btn-outline service-btn" data-service="NÃO ATENDIDO">NÃO ATENDIDO</button>
+                    </div>
+                    
+                    <div>
+                        <label for="serviceSelect" class="block text-sm font-medium mb-2">Informações e Outros Serviços</label>
+                        <select id="serviceSelect" class="select w-full">
+                            <option value="">Selecione um serviço</option>
+                            <option value="INFORMAÇÕES LC">INFORMAÇÕES LCE</option>
+                            <option value="INFORMAÇÕE SGERAIS">INFORMAÇÕES GERAIS</option>
+                            <option value="INFORMAÇÕES VACINAS">INFORMAÇÕES VACINAS</option>
+                            <option value="INFORMAÇOES EXAMES">INFORMAÇOES EXAMES</option>
+                            <option value="INFORMAÇÕES DE PAGAMENTOS">INFORMAÇÕES DE PAGAMENTOS</option>
+                            <option value="INFORMAÇÕES DE AUTORIZAÇÃO">INFORMAÇÕES DE AUTORIZAÇÃO</option>
+                            <option value="INFORMAÇÃO DE TOXICOLOGICO">INFORMAÇÃO DE TOXICOLOGICO</option>
+                            <option value="INFORMAÇÃO DE TESTE DO PEZINHO">INFORMAÇÃO DE TESTE DO PEZINHO</option>
+                            <option value="INFORMAÇÃO DDE A200">INFORMAÇÃO DE A200</option>
+                            <option value="INFORMAÇÃO DE TRESP">INFORMAÇÃO DE TRESP</option>
+                            <option value="INFORMAÇÃO DE TSBAC">INFORMAÇÃO DE TSBAC</option>
+                            <option value="INFORMAÇÃO DE SOMMOS">INFORMAÇÃO DE SOMMOS</option>
+                            <option value="INFORMAÇÃO DE PROBIOME">INFORMAÇÃO DE PROBIOME</option>
+                            <option value="CLIENTE SILENCIOSO">CLIENTE SILENCIOSO</option>
+                            <option value="INFO">INFO</option>
+                        </select>
+                        <button id="serviceSelectBtn" class="btn btn-primary w-full mt-2" disabled>Confirmar Serviço</button>
+                    </div>
+                </div>
+            </div>
 
-        function carregarEstado() {
-            const estadoSalvo = localStorage.getItem(storageKey);
-            if (estadoSalvo) {
-                const estado = JSON.parse(estadoSalvo);
-                totalEntrou = estado.totalEntrou; counter = estado.counter; atendidas = estado.atendidas; naoAtendidas = estado.naoAtendidas; totalOrcamentos = estado.totalOrcamentos; totalVacinas = estado.totalVacinas; totalInformacao = estado.totalInformacao; totalResultado = estado.totalResultado; totalColeta = estado.totalColeta; totalCadastro = estado.totalCadastro; totalLce = estado.totalLce; totalPagamento = estado.totalPagamento; totalAutorizacao = estado.totalAutorizacao; totalConsulta = estado.totalConsulta; totalClienteSilencioso = estado.totalClienteSilencioso;
-                
-                counterElement.textContent = counter;
-                document.querySelector("#pessoasTable tbody").innerHTML = estado.tabelaHTML;
-                updateDownloadButtons();
-                console.log("Estado carregado!", estado);
-            }
-        }
-        // --- FIM DO NOVO ---
+            <!-- Tabela de Pacientes -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Registro de Atendimentos</h3>
+                </div>
+                <div class="card-content">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nº</th>
+                                    <th>Unidade</th>
+                                    <th>Tipo</th>
+                                    <th>Senha</th>
+                                    <th>Hora</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recordsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="noRecords" class="text-center text-muted-foreground py-8">
+                        Nenhum atendimento registrado ainda.
+                    </div>
+                </div>
+            </div>
 
-        entrarBtn.addEventListener('click', function() {
-            counter++;
-            totalEntrou++;
-            counterElement.textContent = counter;
-            tipoAtendimentoDiv.classList.remove('hidden');
-            currentPerson = null;
-            entrarBtn.classList.add('hidden');
-        });
+            <!-- Botão de Envio -->
+            <div id="submitSection" class="hidden text-center">
+                <button id="submitBtn" class="btn btn-success btn-lg">Enviar Dados Pendentes</button>
+                <div id="submitLoading" class="hidden mt-4">
+                    <div class="spinner"></div>
+                    <p class="text-muted-foreground">Enviando dados...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        document.querySelectorAll('.tipoBtn').forEach(button => {
-            button.addEventListener('click', function() {
-                const tipo = button.getAttribute('data-tipo');
-                switch (tipo) {
-                    case 'Orcamentos': totalOrcamentos++; break;
-                    case 'Vacinas': totalVacinas++; break;
-                    case 'Informacao': totalInformacao++; break;
-                    case 'Resultado': totalResultado++; break;
-                    case 'Coleta': totalColeta++; break;
-                    case 'Cadastro': totalCadastro++; break;
-                    case 'Lce': totalLce++; break;
-                    case 'Pagamento': totalPagamento++; break;
-                    case 'Autorizacao': totalAutorizacao++; break;
-                    case 'Consulta': totalConsulta++; break;
-                    case 'ClienteSilencioso': totalClienteSilencioso++; break;
-                }
-                atendidas++; // Incrementa atendidas aqui
+    <!-- Modal de Edição -->
+    <div id="editModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Atendimento</h3>
+                <button id="closeModalBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body space-y-4">
+                <div>
+                    <label for="editTipoAtendimento">Tipo de Atendimento</label>
+                    <select id="editTipoAtendimento" class="select w-full">
+                        <option value="ORÇAMENTO VACINA">ORÇAMENTO VACINA</option>
+                        <option value="ORÇAMENTO EXAME">ORÇAMENTO EXAME</option>
+                        <option value="CADASTRO PACIENTE">CADASTRO PACIENTE</option>
+                        <option value="INFORMAÇÕES LC">INFORMAÇÕES LCE</option>
+                        <option value="INFORMAÇÕE SGERAIS">INFORMAÇÕES GERAIS</option>
+                        <option value="INFORMAÇÕES VACINAS">INFORMAÇÕES VACINAS</option>
+                        <option value="INFORMAÇOES EXAMES">INFORMAÇOES EXAMES</option>
+                        <option value="INFORMAÇÕES DE PAGAMENTOS">INFORMAÇÕES DE PAGAMENTOS</option>
+                        <option value="INFORMAÇÕES DE AUTORIZAÇÃO">INFORMAÇÕES DE AUTORIZAÇÃO</option>
+                        <option value="INFORMAÇÃO DE TOXICOLOGICO">INFORMAÇÃO DE TOXICOLOGICO</option>
+                        <option value="INFORMAÇÃO DE TESTE DO PEZINHO">INFORMAÇÃO DE TESTE DO PEZINHO</option>
+                        <option value="INFORMAÇÃO DDE A200">INFORMAÇÃO DE A200</option>
+                        <option value="INFORMAÇÃO DE TRESP">INFORMAÇÃO DE TRESP</option>
+                        <option value="INFORMAÇÃO DE TSBAC">INFORMAÇÃO DE TSBAC</option>
+                        <option value="INFORMAÇÃO DE SOMMOS">INFORMAÇÃO DE SOMMOS</option>
+                        <option value="INFORMAÇÃO DE PROBIOME">INFORMAÇÃO DE PROBIOME</option>
+                        <option value="CLIENTE SILENCIOSO">CLIENTE SILENCIOSO</option>
+                        <option value="INFO">INFO</option>
+                        
+                    </select>
+                </div>
+                <div>
+                    <label for="editSenha">Tipo de Senha</label>
+                    <select id="editSenha" class="select w-full">
+                        <option value="Com Senha">Com Senha</option>
+                        <option value="Sem Senha">Sem Senha</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                    <div>
+                        <label class="text-xs">Hora:</label>
+                        <p id="editHoraDisplay"></p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                    <div>
+                        <label class="text-xs">Unidade:</label>
+                        <p id="editUnidade"></p>
+                    </div>
+                    <div>
+                        <label class="text-xs">Data:</label>
+                        <p id="editData"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelEditBtn" class="btn btn-outline">Cancelar</button>
+                <button id="saveEditBtn" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
 
-                updateTable(counter, tipo, "Atendida", `Pessoa ${counter}: ${tipo}, Foi atendida`);
-                currentPerson = null;
-                tipoAtendimentoDiv.classList.add('hidden');
-                updateDownloadButtons();
-                enviarBtn.classList.remove('hidden');
-                entrarBtn.classList.remove('hidden');
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
-                // --- NOVO: Salva o estado após cada atendimento ---
-                salvarEstado();
-            });
-        });
-
-        function updateTable(num, tipo, status, estadoAtual) {
-            const tableBody = document.querySelector("#pessoasTable tbody");
-            const row = tableBody.insertRow();
-            row.insertCell().textContent = num;
-            row.insertCell().textContent = estadoAtual;
-            row.insertCell().textContent = tipo;
-            row.insertCell().innerHTML = '<div class="no-wrap"><button class="btn btn-success btn-sm" disabled>Atendida</button></div>';
-            row.insertCell().innerHTML = '<button class="btn btn-secondary btn-sm" disabled>Editar</button>'; // Botão de editar desabilitado pois a função não existe no seu arquivo original
-            row.insertCell().textContent = "N/A";
-        }
-        
-        // --- NOVO: Função de editar não existe no seu código, adicionei um alerta para evitar erros ---
-        function editarTipoAtendimento(num) {
-            alert("A função de editar ainda não foi implementada neste arquivo.");
-        }
-
-        function enviarDados() {
-            // Preenche os totais de atendimentos nas variáveis do formulário
-            document.getElementById('totalOrcamentos').value = totalOrcamentos;
-            document.getElementById('totalVacinas').value = totalVacinas;
-            document.getElementById('totalInformacao').value = totalInformacao;
-            document.getElementById('totalResultado').value = totalResultado;
-            document.getElementById('totalColeta').value = totalColeta;
-            document.getElementById('totalCadastro').value = totalCadastro;
-            document.getElementById('totalLce').value = totalLce;
-            document.getElementById('totalPagamento').value = totalPagamento;
-            document.getElementById('totalAutorizacao').value = totalAutorizacao;
-            document.getElementById('totalConsulta').value = totalConsulta;
-            document.getElementById('totalClienteSilencioso').value = totalClienteSilencioso;
-            document.getElementById('atendidas').value = atendidas;
-            document.getElementById('contadorPacientes').value = totalEntrou;
-
-            const date = new Date();
-            const formattedDate = ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + date.getFullYear().toString().slice(-2);
-            document.getElementById('data').value = formattedDate;
-
-            // --- NOVO: Limpa o armazenamento local ANTES de enviar o formulário ---
-            // Como o form.submit() recarrega a página, esta é a única oportunidade de limpar.
-            localStorage.removeItem(storageKey);
-            
-            document.getElementById('sendDataForm').submit();
-        }
-
-        function resetCounters() {
-            // Esta função pode ser removida ou adaptada, pois a limpeza agora é feita no envio.
-            localStorage.removeItem(storageKey); // Limpa o storage se chamada
-            location.reload(); // Recarrega a página para zerar
-        }
-
-        function updateDownloadButtons() {
-            enviarBtn.classList.toggle('hidden', counter <= 0);
-        }
-
-        // --- NOVO: Carrega o estado salvo assim que a página é aberta ---
-        window.onload = function() {
-            carregarEstado();
-        };
-    </script>
-
-    <form id="sendDataForm" method="POST" action="https://script.google.com/macros/s/AKfycbw-KtYQulM3d87rtbv-z3P0c7BVB_1a2KGH6IY0KreySMmWyELVmxLvbSBhYFiCzi_9hw/exec" target="_blank">
-        <input type="hidden" id="data" name="data">
-        <input type="hidden" id="totalOrcamentos" name="totalOrcamentos">
-        <input type="hidden" id="totalVacinas" name="totalVacinas">
-        <input type="hidden" id="totalInformacao" name="totalInformacao">
-        <input type="hidden" id="totalResultado" name="totalResultado">
-        <input type="hidden" id="totalColeta" name="totalColeta">
-        <input type="hidden" id="totalCadastro" name="totalCadastro">
-        <input type="hidden" id="totalLce" name="totalLce">
-        <input type="hidden" id="totalPagamento" name="totalPagamento">
-        <input type="hidden" id="totalAutorizacao" name="totalAutorizacao">
-        <input type="hidden" id="totalConsulta" name="totalConsulta">
-        <input type="hidden" id="totalClienteSilencioso" name="totalClienteSilencioso">
-        <input type="hidden" id="atendidas" name="atendidas">
-        <input type="hidden" id="contadorPacientes" name="contadorPacientes">
-    </form>
-
+    <script src="script.js"></script>
 </body>
 </html>
